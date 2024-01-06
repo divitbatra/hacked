@@ -2,91 +2,108 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-void main() {
-  runApp(HateSpeechDetectorApp());
-}
+void main() => runApp(ModerationApp());
 
-class HateSpeechDetectorApp extends StatelessWidget {
+class ModerationApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Hate Speech Detector',
-      home: HateSpeechDetectorScreen(),
+      title: 'Text Moderation App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: ModerationHomePage(),
     );
   }
 }
 
-class HateSpeechDetectorScreen extends StatefulWidget {
+class ModerationHomePage extends StatefulWidget {
   @override
-  _HateSpeechDetectorScreenState createState() =>
-      _HateSpeechDetectorScreenState();
+  _ModerationHomePageState createState() => _ModerationHomePageState();
 }
 
-class _HateSpeechDetectorScreenState extends State<HateSpeechDetectorScreen> {
-  TextEditingController textController = TextEditingController();
-  String result = '';
+class _ModerationHomePageState extends State<ModerationHomePage> {
+  final TextEditingController _controller = TextEditingController();
+  String _result = '';
+  bool _isLoading = false;
 
-  Future<void> checkHateSpeech(String text) async {
-    final apiUrl = Uri.parse('https://twinword-sentiment-analysis.p.rapidapi.com/analyze/');
+  void _moderateText() async {
+    setState(() => _isLoading = true);
 
-    final response = await http.post(
-      apiUrl,
-      headers: {
-        'content-type': 'application/x-www-form-urlencoded',
-        'X-RapidAPI-Key': 'beae8c3a10msh6b06844bcdf317ap1d9c9djsn2592ac3ff386',
-        'X-RapidAPI-Host': 'twinword-sentiment-analysis.p.rapidapi.com',
-      },
-      body: {
-        'text': text,
-      },
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('https://api.openai.com/v1/moderations'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer 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', // Replace with your actual API key
+        },
+        body: json.encode({'input': _controller.text}),
+      );
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final sentimentType = data['type'];
+      var responseBody = json.decode(response.body);
+      if (response.statusCode == 200) {
+        setState(() {
+          var results = responseBody['results'] as List;
+          if (results.isNotEmpty) {
+            var categories = results[0]['categories'] as Map;
+            var flaggedCategories = categories.entries
+                .where((e) => e.value == true)
+                .map((e) => e.key)
+                .toList();
 
-      if (sentimentType == 'negative') {
-        result = 'Hate Speech Detected';
+            if (flaggedCategories.isNotEmpty) {
+              _result = flaggedCategories.join(', ');
+            } else {
+              _result = 'No moderation issues found.';
+            }
+          } else {
+            _result = 'No moderation results found';
+          }
+        });
       } else {
-        result = 'Not Hate Speech';
+        setState(() {
+          _result = 'Error: ${response.reasonPhrase}';
+        });
       }
-    } else {
-      result = 'Error occurred while checking hate speech';
+    } catch (e) {
+      setState(() {
+        _result = 'Error: $e';
+      });
+    } finally {
+      setState(() => _isLoading = false);
     }
-
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Hate Speech Detector'),
+        title: Text('Text Moderation'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
             TextField(
-              controller: textController,
-              decoration: InputDecoration(labelText: 'Enter Text'),
+              controller: _controller,
+              decoration: InputDecoration(
+                labelText: 'Enter text to moderate',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
             ),
-            SizedBox(height: 20.0),
+            SizedBox(height: 10),
             ElevatedButton(
-              onPressed: () {
-                final inputText = textController.text;
-                if (inputText.isNotEmpty) {
-                  checkHateSpeech(inputText);
-                }
-              },
-              child: Text('Check Hate Speech'),
+              onPressed: _moderateText,
+              child: _isLoading ? CircularProgressIndicator(color: Colors.white) : Text('Moderate'),
             ),
-            SizedBox(height: 20.0),
+            SizedBox(height: 20),
             Text(
-              result,
+              'Moderation Issues: $_result',
               style: TextStyle(
-                fontSize: 18.0,
+                color: _result.contains('No moderation issues found') ? Colors.green : Colors.red,
                 fontWeight: FontWeight.bold,
               ),
             ),
