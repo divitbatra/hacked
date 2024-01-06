@@ -21,53 +21,74 @@ class InstagramCommentScraperScreen extends StatefulWidget {
 
 class _InstagramCommentScraperScreenState extends State<InstagramCommentScraperScreen> {
   final TextEditingController _urlController = TextEditingController();
-  List<dynamic> _comments = [];
+  List<String> _comments = [];
   bool _isLoading = false;
   final String _apiToken = 'apify_api_goaFYQnxjfhU8ZYleBuifHudntaaKD0qhAV0'; // Your API token
 
-  void _fetchComments() async {
+  Future<void> _fetchComments() async {
     setState(() => _isLoading = true);
-    String postUrl = _urlController.text;
-
-    // Prepare the Actor input
-    Map<String, dynamic> runInput = {
-      "directUrls": [postUrl],
-      "resultsLimit": 20,
-    };
+    print('Fetching comments...');
 
     try {
-      // Start the Actor
+      String postUrl = _urlController.text;
+      Map<String, dynamic> runInput = {
+        "directUrls": [postUrl],
+        "resultsLimit": 20,
+      };
+
       var startResponse = await http.post(
         Uri.parse('https://api.apify.com/v2/acts/apify~instagram-comment-scraper/runs?token=$_apiToken'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(runInput),
       );
 
-      if (startResponse.statusCode == 201) {
-        var runId = json.decode(startResponse.body)['data']['id'];
+      print('Start response status: ${startResponse.statusCode}');
+      print('Start response body: ${startResponse.body}');
 
-        // Fetch results from the dataset
+      if (startResponse.statusCode == 201) {
         var datasetId = json.decode(startResponse.body)['data']['defaultDatasetId'];
+        var isActorFinished = false;
+
+        while (!isActorFinished) {
+          await Future.delayed(Duration(seconds: 10));
+          var statusResponse = await http.get(Uri.parse('https://api.apify.com/v2/actor-runs/${json.decode(startResponse.body)['data']['id']}?token=$_apiToken'));
+
+          print('Status response status: ${statusResponse.statusCode}');
+          print('Status response body: ${statusResponse.body}');
+
+          if (statusResponse.statusCode == 200) {
+            var statusData = json.decode(statusResponse.body);
+            isActorFinished = statusData['data']['status'] == 'SUCCEEDED';
+          }
+        }
+
         var datasetUrl = 'https://api.apify.com/v2/datasets/$datasetId/items?token=$_apiToken';
-        await Future.delayed(Duration(seconds: 10)); // Wait for the actor to finish
         var datasetResponse = await http.get(Uri.parse(datasetUrl));
 
+        print('Dataset response status: ${datasetResponse.statusCode}');
+        print('Dataset response body: ${datasetResponse.body}');
+
         if (datasetResponse.statusCode == 200) {
+          var data = json.decode(datasetResponse.body) as List;
           setState(() {
-            _comments = json.decode(datasetResponse.body);
+            _comments = data.map((item) => '"${item['ownerUsername']}": "${item['text']}"').toList();
+            print('Comments fetched: ${_comments.length}');
           });
-        } else {
-          print('Failed to load comments. Status code: ${datasetResponse.statusCode}');
         }
-      } else {
-        print('Failed to start actor. Status code: ${startResponse.statusCode}');
       }
     } catch (e) {
-      print('Error: $e');
+      print('Error in _fetchComments: $e');
     } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        print('Loading complete');
+      });
     }
   }
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +113,7 @@ class _InstagramCommentScraperScreenState extends State<InstagramCommentScraperS
                 itemCount: _comments.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: Text(_comments[index].toString()),
+                    title: Text(_comments[index]),
                   );
                 },
               ),
