@@ -1,148 +1,110 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:async';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(ModerationApp());
 
-class MyApp extends StatelessWidget {
+class ModerationApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Instagram Comment Scraper with Moderation',
-      home: InstagramCommentScraperScreen(),
+      title: 'Text Moderation App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: ModerationHomePage(),
     );
   }
 }
 
-class InstagramCommentScraperScreen extends StatefulWidget {
+class ModerationHomePage extends StatefulWidget {
   @override
-  _InstagramCommentScraperScreenState createState() => _InstagramCommentScraperScreenState();
+  _ModerationHomePageState createState() => _ModerationHomePageState();
 }
 
-class _InstagramCommentScraperScreenState extends State<InstagramCommentScraperScreen> {
-  final TextEditingController _urlController = TextEditingController();
-  List<Map<String, dynamic>> _comments = [];
+class _ModerationHomePageState extends State<ModerationHomePage> {
+  final TextEditingController _controller = TextEditingController();
+  String _result = '';
   bool _isLoading = false;
-  final String _openaiApiToken = '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'; // Replace with your actual OpenAI API key
-  final String _apifyApiToken = 'apify_api_goaFYQnxjfhU8ZYleBuifHudntaaKD0qhAV0'; // Replace with your actual Apify API token
 
-  Future<void> _fetchAndModerateComments() async {
+  void _moderateText() async {
     setState(() => _isLoading = true);
-    _comments.clear();
-    await logToFile('Fetching and moderating comments...');
 
     try {
-      String postUrl = _urlController.text;
-      Map<String, dynamic> runInput = {
-        "directUrls": [postUrl],
-        "resultsLimit": 20,
-      };
-
-      var startResponse = await http.post(
-        Uri.parse('https://api.apify.com/v2/acts/apify~instagram-comment-scraper/runs?token=$_apifyApiToken'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(runInput),
+      final response = await http.post(
+        Uri.parse('https://api.openai.com/v1/moderations'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer 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', // Replace with your actual API key
+        },
+        body: json.encode({'input': _controller.text}),
       );
 
-      if (startResponse.statusCode == 201) {
-        var datasetId = json.decode(startResponse.body)['data']['defaultDatasetId'];
-        var isActorFinished = false;
+      var responseBody = json.decode(response.body);
+      if (response.statusCode == 200) {
+        setState(() {
+          var results = responseBody['results'] as List;
+          if (results.isNotEmpty) {
+            var categories = results[0]['categories'] as Map;
+            var flaggedCategories = categories.entries
+                .where((e) => e.value == true)
+                .map((e) => e.key)
+                .toList();
 
-        while (!isActorFinished) {
-          await Future.delayed(Duration(seconds: 10));
-          var statusResponse = await http.get(Uri.parse('https://api.apify.com/v2/actor-runs/${json.decode(startResponse.body)['data']['id']}?token=$_apifyApiToken'));
-
-          if (statusResponse.statusCode == 200) {
-            var statusData = json.decode(statusResponse.body);
-            isActorFinished = statusData['data']['status'] == 'SUCCEEDED';
-          }
-        }
-
-        var datasetUrl = 'https://api.apify.com/v2/datasets/$datasetId/items?token=$_apifyApiToken';
-        var datasetResponse = await http.get(Uri.parse(datasetUrl));
-
-        if (datasetResponse.statusCode == 200) {
-          var data = json.decode(datasetResponse.body) as List;
-
-          for (var item in data) {
-            var moderationResponse = await http.post(
-              Uri.parse('https://api.openai.com/v1/moderations'),
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer $_openaiApiToken',
-              },
-              body: json.encode({'input': item['text']}),
-            );
-
-            if (moderationResponse.statusCode == 200) {
-              var responseBody = json.decode(moderationResponse.body);
-              var results = responseBody['results'] as List;
-              if (results.isNotEmpty) {
-                var categories = results[0]['categories'] as Map;
-                var flaggedCategories = categories.entries
-                    .where((e) => e.value == true)
-                    .map((e) => e.key)
-                    .toList();
-
-                if (flaggedCategories.isNotEmpty) {
-                  _comments.add({
-                    "text": item['text'],
-                    "moderation": flaggedCategories.join(', '),
-                  });
-                  await logToFile('Flagged comment: ${item['text']}');
-                }
-              }
+            if (flaggedCategories.isNotEmpty) {
+              _result = flaggedCategories.join(', ');
+            } else {
+              _result = 'No moderation issues found.';
             }
+          } else {
+            _result = 'No moderation results found';
           }
-        }
+        });
+      } else {
+        setState(() {
+          _result = 'Error: ${response.reasonPhrase}';
+        });
       }
     } catch (e) {
-      print('Error: $e');
-      await logToFile('Error: $e');
+      setState(() {
+        _result = 'Error: $e';
+      });
     } finally {
       setState(() => _isLoading = false);
-      await logToFile('Fetching and moderation complete');
     }
-  }
-
-  Future<void> logToFile(String message) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final file = File('${directory.path}/app_logs.txt');
-    final timestamp = DateTime.now().toIso8601String();
-    await file.writeAsString('$timestamp: $message\n', mode: FileMode.append);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Instagram Comment Scraper with Moderation'),
+        title: Text('Text Moderation'),
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             TextField(
-              controller: _urlController,
-              decoration: InputDecoration(labelText: 'Enter Instagram Post URL'),
+              controller: _controller,
+              decoration: InputDecoration(
+                labelText: 'Enter text to moderate',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
             ),
+            SizedBox(height: 10),
             ElevatedButton(
-              onPressed: _fetchAndModerateComments,
-              child: _isLoading ? CircularProgressIndicator() : Text('Fetch and Moderate Comments'),
+              onPressed: _moderateText,
+              child: _isLoading ? CircularProgressIndicator(color: Colors.white) : Text('Moderate'),
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _comments.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(_comments[index]['text']),
-                    subtitle: Text('Moderation Issues: ${_comments[index]['moderation']}'),
-                    tileColor: Colors.redAccent.withOpacity(0.2),
-                  );
-                },
+            SizedBox(height: 20),
+            Text(
+              'Moderation Issues: $_result',
+              style: TextStyle(
+                color: _result.contains('No moderation issues found') ? Colors.green : Colors.red,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],

@@ -1,110 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'instagram_comment_scraper_screen.dart'; // Make sure to create this separate Dart file for the InstagramCommentScraperScreen
 
-void main() => runApp(ModerationApp());
+void main() => runApp(MyApp());
 
-class ModerationApp extends StatelessWidget {
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Text Moderation App',
+      title: 'Modern Flutter App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: ModerationHomePage(),
+      home: HomePage(),
     );
   }
 }
 
-class ModerationHomePage extends StatefulWidget {
-  @override
-  _ModerationHomePageState createState() => _ModerationHomePageState();
-}
-
-class _ModerationHomePageState extends State<ModerationHomePage> {
-  final TextEditingController _controller = TextEditingController();
-  String _result = '';
-  bool _isLoading = false;
-
-  void _moderateText() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final response = await http.post(
-        Uri.parse('https://api.openai.com/v1/moderations'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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', // Replace with your actual API key
-        },
-        body: json.encode({'input': _controller.text}),
-      );
-
-      var responseBody = json.decode(response.body);
-      if (response.statusCode == 200) {
-        setState(() {
-          var results = responseBody['results'] as List;
-          if (results.isNotEmpty) {
-            var categories = results[0]['categories'] as Map;
-            var flaggedCategories = categories.entries
-                .where((e) => e.value == true)
-                .map((e) => e.key)
-                .toList();
-
-            if (flaggedCategories.isNotEmpty) {
-              _result = flaggedCategories.join(', ');
-            } else {
-              _result = 'No moderation issues found.';
-            }
-          } else {
-            _result = 'No moderation results found';
-          }
-        });
-      } else {
-        setState(() {
-          _result = 'Error: ${response.reasonPhrase}';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _result = 'Error: $e';
-      });
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
+class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Text Moderation'),
+        title: Text('Modern Flutter App'),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                labelText: 'Enter text to moderate',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _moderateText,
-              child: _isLoading ? CircularProgressIndicator(color: Colors.white) : Text('Moderate'),
+            Text(
+              'Welcome to the Modern Flutter App!',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
-            Text(
-              'Moderation Issues: $_result',
-              style: TextStyle(
-                color: _result.contains('No moderation issues found') ? Colors.green : Colors.red,
-                fontWeight: FontWeight.bold,
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => InstagramCommentScraperScreen()),
+                );
+              },
+              child: Text('Instagram Moderation'),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.blue,
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
           ],
