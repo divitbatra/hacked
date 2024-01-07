@@ -23,7 +23,7 @@ class _InstagramProfileFetcherScreenState extends State<InstagramProfileFetcherS
   final TextEditingController _usernameController = TextEditingController();
   List<String> _captions = [];
   bool _isLoading = false;
-  final String _apifyApiToken = '<YOUR_APIFY_API_KEY>'; // Replace with your actual Apify API token
+  final String _apifyApiToken = '<YOUR_APIFY_LINK>'; // Replace with your actual Apify API token
 
   Future<void> _fetchInstagramProfile() async {
     setState(() => _isLoading = true);

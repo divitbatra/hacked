@@ -9,7 +9,7 @@ class MisinformationDetector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'OpenAI Chat',
+      title: 'Misinformation Detector',
       home: OpenAIChatPage(),
     );
   }
@@ -26,31 +26,32 @@ class _OpenAIChatPageState extends State<OpenAIChatPage> {
 
   void _sendMessage() async {
     final messages = [
-      {"role": "system", "content": "You are a intelligent assistant."}
+      {"role": "system", "content": "You are an intelligent assistant."}
     ];
 
     String userMessage = _textController.text;
     if (userMessage.isNotEmpty) {
       messages.add({"role": "user", "content": "state true or false: $userMessage"});
 
+      // Fetch the video title from YouTube API
+      final videoTitle = await fetchVideoTitle(userMessage);
+
+      // Add video title to the messages
+      messages.add({"role": "assistant", "content": "Video Title: $videoTitle"});
+
       var requestBody = jsonEncode({
         "model": "gpt-3.5-turbo",
         "messages": messages,
       });
 
-      print('Request body: $requestBody'); // Debugging
-
       var response = await http.post(
         Uri.parse('https://api.openai.com/v1/chat/completions'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer <YOUR_OPENAI_API_KEY>' // Replace with your actual API key
+          'Authorization': 'Bearer <YOUR_OPENAI_API_KEY>', // Replace with your actual API key
         },
         body: requestBody,
       );
-
-      print('Response status: ${response.statusCode}'); // Debugging
-      print('Response body: ${response.body}'); // Debugging
 
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
@@ -62,6 +63,27 @@ class _OpenAIChatPageState extends State<OpenAIChatPage> {
           _response = 'Error: ${response.statusCode}';
         });
       }
+    }
+  }
+
+  Future<String> fetchVideoTitle(String videoUrl) async {
+    final videoId = videoUrl.split("v=")[1];
+    final apiKey = "<YOUR_GOOGLE_API_KEY>"; // Replace with your YouTube API key
+
+    final url = Uri.parse(
+        "https://www.googleapis.com/youtube/v3/videos?key=$apiKey&id=$videoId&part=snippet");
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      if (jsonResponse["items"] != null && jsonResponse["items"].isNotEmpty) {
+        return jsonResponse["items"][0]["snippet"]["title"];
+      } else {
+        return "Video not found";
+      }
+    } else {
+      return "Error fetching video title";
     }
   }
 
@@ -79,15 +101,16 @@ class _OpenAIChatPageState extends State<OpenAIChatPage> {
             ),
             child: AnimatedTextKit(
               animatedTexts: [
-                TypewriterAnimatedText('Misinformation Detector',
-                  speed: const Duration(milliseconds: 100),),
+                TypewriterAnimatedText(
+                  'Misinformation Detector',
+                  speed: const Duration(milliseconds: 100),
+                ),
               ],
               totalRepeatCount: 1,
             ),
           ),
         ),
       ),
-
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
@@ -95,19 +118,20 @@ class _OpenAIChatPageState extends State<OpenAIChatPage> {
             TextField(
               controller: _textController,
               decoration: InputDecoration(
-                labelText: 'Enter your message',
+                labelText: 'Enter YouTube Video URL',
               ),
             ),
             SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: _sendMessage,
-              child: Text('Send'),
+              child: Text('Fetch Video Title and Detect Misinformation'),
               style: ElevatedButton.styleFrom(
                 primary: Colors.blue,
                 onPrimary: Colors.white,
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
               ),
             ),
             SizedBox(height: 20),
@@ -120,6 +144,12 @@ class _OpenAIChatPageState extends State<OpenAIChatPage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
   }
 }
 

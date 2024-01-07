@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 // Import all your page classes
-import 'misinformation.dart';
-import 'package:animated_text_kit/animated_text_kit.dart';
-import 'reddit.dart';
-import 'instagram.dart';
-import 'youtube.dart';
-import 'package:social_media_buttons/social_media_icons.dart';
+import 'instagram_comment_scraper_screen.dart';
 
-class ButtonPage extends StatelessWidget {
+import 'caption_moderation.dart';
+
+import 'package:animated_text_kit/animated_text_kit.dart';
+
+
+class InstagramPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,7 +39,7 @@ class ButtonPage extends StatelessWidget {
                       child: AnimatedTextKit(
                         animatedTexts: [
                           TypewriterAnimatedText(
-                            'Choose from the following platforms',
+                            'Choose from the following tools',
                             speed: const Duration(milliseconds: 100),
                           ),
                         ],
@@ -50,33 +50,18 @@ class ButtonPage extends StatelessWidget {
                   SizedBox(height: 20),
                   _buildElevatedButton(
                     context,
-                    'Instagram',
-                    InstagramPage(),
-                      Icon(SocialMediaIcons.instagram)
+                    'Instagram Comments Moderation',
+                    InstagramCommentScraperScreen(),
                   ),
 
                   SizedBox(height: 10),
                   _buildElevatedButton(
                     context,
-                    'Reddit',
-                    RedditPage(),
-                    Icon(SocialMediaIcons.reddit),
+                    'Caption Moderation Tool',
+                    CaptionModerationApp(),
                   ),
-                  SizedBox(height: 10),
-                  _buildElevatedButton(
-                      context,
-                      'YouTube',
-                      YoutubePage(),
-                      Icon(SocialMediaIcons.youtube)
 
-                  ),
-                  SizedBox(height: 10),
-                  _buildElevatedButton(
-                    context,
-                    'Misinformation Detector',
-                    MisinformationDetector(),
-                    Icon(SocialMediaIcons.android),
-                  ),
+
 
                   // ... [Add other ElevatedButton widgets here with SizedBox for spacing]
                 ],
@@ -86,9 +71,8 @@ class ButtonPage extends StatelessWidget {
         )
     );
   }
-}
 
-  Widget _buildElevatedButton(BuildContext context, String text, Widget destination, Icon SocialMediaIcon) {
+  Widget _buildElevatedButton(BuildContext context, String text, Widget destination) {
     return SizedBox(
       width: 200,
       child: ElevatedButton(
@@ -98,15 +82,7 @@ class ButtonPage extends StatelessWidget {
             MaterialPageRoute(builder: (context) => destination),
           );
         },
-        child: GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => destination),
-            );
-          },
-          child: SocialMediaIcon
-        ),
+        child: Text(text),
         style: ElevatedButton.styleFrom(
           primary: Colors.blue,
           onPrimary: Colors.white,
@@ -117,4 +93,4 @@ class ButtonPage extends StatelessWidget {
       ),
     );
   }
-
+}

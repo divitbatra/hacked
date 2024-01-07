@@ -29,10 +29,10 @@ class _CaptionModerationScreenState extends State<CaptionModerationScreen> {
   final String _openAiApiKey = '<YOUR_OPENAI_API_KEY>'; // Replace with your actual OpenAI API key
 
   Future<String> _getRedditAccessToken() async {
-    String clientId = '<YOUR_CLIENT_ID>';
-    String clientSecret = '<YOUR_CLIENT_SECRET>';
-    String username = '<YOUR_USERNAME>';
-    String password = '<YOUR_PASSWORD>';
+    String clientId = '<YOUR_REDDIT_CLIENT_ID>';
+    String clientSecret = '<YOUR_REDDIT_CLIENT_SECRET>';
+    String username = '<YOUR_REDDIT_USERNAME>';
+    String password = '<YOUR_REDDIT_PASSWORD>';
 
     String basicAuth = 'Basic ' + base64Encode(utf8.encode('$clientId:$clientSecret'));
     var response = await http.post(

@@ -100,6 +100,9 @@ class _CaptionModerationScreenState extends State<CaptionModerationScreen> {
 
   Future<void> _moderateText(String text) async {
     try {
+      // Remove hashtags from the text
+      text = text.replaceAll(RegExp(r'#\w+'), '');
+
       final response = await http.post(
         Uri.parse('https://api.openai.com/v1/moderations'),
         headers: {

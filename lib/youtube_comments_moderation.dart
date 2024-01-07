@@ -27,7 +27,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final apikey = '<YOUR_GOOGLE_API>'; // Replace with your YouTube Data API key
+  final apikey = '<YOUR_GOOGLE_API_KEY>'; // Replace with your YouTube Data API key
   final moderationApiKey = '<YOUR_OPENAI_API_KEY>'; // Replace with your Moderation API key
   final videoUrlController = TextEditingController();
   List<String> comments = [];

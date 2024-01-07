@@ -34,7 +34,7 @@ class WelcomePage extends StatelessWidget {
                     child: AnimatedTextKit(
                       animatedTexts: [
                         TypewriterAnimatedText(
-                          'Welcome to the Social Media Moderation Tool!',
+                          'Welcome to the Social Media Moderation App',
                           speed: const Duration(milliseconds: 100),
                         ),
                       ],
@@ -53,7 +53,7 @@ class WelcomePage extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Text('Go to Buttons'),
+                      Text('Moderate'),
                       Icon(Icons.arrow_forward), // Arrow icon
                     ],
                   ),

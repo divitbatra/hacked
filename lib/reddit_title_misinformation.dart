@@ -28,10 +28,10 @@ class _RedditPostAnalysisPageState extends State<RedditPostAnalysisPage> {
   bool _isLoading = false;
 
   Future<String> _getRedditAccessToken() async {
-    String clientId = '<YOUR_CLIENT_ID>';
-    String clientSecret = '<YOUR_CLIENT_SECRET>';
-    String username = '<YOUR_USERNAME>';
-    String password = '<YOUR_PASSWORD>';
+    String clientId = '<YOUR_REDDIT_CLIENT_ID>';
+    String clientSecret = '<YOUR_REDDIT_CLIENT_SECRET>';
+    String username = '<YOUR_REDDIT_USERNAME>';
+    String password = '<YOUR_REDDIT_PASSWORD>';
 
     String basicAuth = 'Basic ' + base64Encode(utf8.encode('$clientId:$clientSecret'));
     var response = await http.post(
@@ -115,7 +115,7 @@ class _RedditPostAnalysisPageState extends State<RedditPostAnalysisPage> {
         Uri.parse('https://api.openai.com/v1/chat/completions'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer <YOUR_OPENAI_KEY>' // Replace with your actual API key
+          'Authorization': 'Bearer <YOUR_OPENAI_API_KEY>' // Replace with your actual API key
         },
         body: requestBody,
       );
