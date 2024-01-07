@@ -36,7 +36,7 @@ class _ModerationHomePageState extends State<ModerationHomePage> {
         Uri.parse('https://api.openai.com/v1/moderations'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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', // Replace with your actual API key
+          'Authorization': 'Bearer <YOUR_OPENAI_API_KEY', // Replace with your actual API key
         },
         body: json.encode({'input': _controller.text}),
       );
