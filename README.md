@@ -1,7 +1,7 @@
-#Flutter Social Media Moderation and Analysis App
+# Flutter Social Media Moderation and Analysis App
 This Flutter project is a comprehensive social media moderation and analysis application designed for various platforms including Instagram, Reddit, and YouTube. The app offers a range of features such as comment scraping, caption moderation, misinformation detection, and analysis of social media posts. Each social media platform is catered to with specific Dart files and functionalities.
 
-#Key Features:
+# Key Features:
 
 Social Media Integration: Modules for Instagram (instagram.dart), Reddit (reddit.dart), and YouTube (youtube.dart) allow for direct interaction with these platforms.
 Comment Scraper and Moderation: Dedicated modules for Instagram (instagram_comment_scraper_screen.dart), Reddit (reddit_comments.dart), and YouTube (youtube_comments_moderation.dart) enable scraping and moderating comments.
@@ -9,18 +9,18 @@ Misinformation Detection: Files like misinformation.dart, reddit_title_misinform
 User Interface Components: Various StatelessWidget and StatefulWidget classes provide a responsive and interactive UI for each feature of the app.
 OpenAI Integration: Some modules utilize OpenAI for chat and analysis functionalities, enhancing the app's capability to detect misinformation and moderate content.
 
-#Technical Details:
+# Technical Details:
 
 The application is structured in a modular fashion, with each major functionality encapsulated in its Dart file.
 The use of Flutter's StatelessWidget and StatefulWidget provides a dynamic and responsive user interface.
 Integration with external APIs for social media platforms and OpenAI is a key aspect of the application, enabling real-time data fetching and processing.
 
-#Potential Applications:
+# Potential Applications:
 
 This app can be used by social media managers, content moderators, and researchers to analyze and moderate content on major social media platforms.
 It can also serve as an educational tool for understanding the impact of misinformation and the mechanics of content moderation in the digital age.
 
-#Component Breakdown
+# Component Breakdown
 
 1) button_page.dart
 
